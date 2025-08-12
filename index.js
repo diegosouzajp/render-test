@@ -4,6 +4,7 @@ const app = express()
 
 app.use(express.json())
 app.use(cors())
+app.use(express.static('dist'))
 
 let notes = [
   { id: '1', content: 'HTML is easy', important: true },
@@ -36,7 +37,6 @@ app.delete('/api/notes/:id', (request, response) => {
 
 const generateId = () => {
   const maxId = notes.length > 0 ? Math.max(...notes.map((n) => Number(n.id))) : 0
-  console.log(maxId)
 
   return String(maxId + 1)
 }
@@ -57,6 +57,28 @@ app.post('/api/notes', (request, response) => {
   notes = notes.concat(note)
 
   response.json(note)
+})
+
+app.put('/api/notes/:id', (request, response) => {
+  const id = request.params.id
+  const body = request.body
+
+  if (!body.content) {
+    return response.status(400).json({ error: 'content missing' })
+  }
+
+  const updatedNote = {
+    id: id,
+    content: body.content,
+    important: body.important || false,
+  }
+
+  notes = notes.map((note) => {
+    if (note.id === id) return updatedNote
+    else return note
+  })
+
+  response.json(updatedNote)
 })
 
 const unknownEndpoint = (request, response) => {
